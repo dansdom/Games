@@ -45,12 +45,12 @@
     *                          ------                      ------                      ------                      ------
     *                          0x2222                      0xf000                      0x2222                      0xf000
     *
-    *   J:  0010 = 0x2 << 3 == 0x2000;  1000 = 0x8 << 3 == 0x8000;  0110 = 0x6 << 3 == 0x6000;  1110 = 0x8 << 3 == 0x8000;
+    *   J:  0010 = 0x2 << 3 == 0x2000;  1000 = 0x8 << 3 == 0x8000;  0110 = 0x6 << 3 == 0x6000;  1110 = 0xe << 3 == 0xe000;
     *       0010 = 0x2 << 2 == 0x0200;  1110 = 0xe << 2 == 0x0e00;  0100 = 0x4 << 2 == 0x0400;  0010 = 0x2 << 2 == 0x0200;
     *       0110 = 0x6 << 1 == 0x0060;  0000 = 0x0 << 1 == 0x0000;  0100 = 0x4 << 1 == 0x0040;  0000 = 0x0 << 1 == 0x0000;
     *       0000 = 0x0 << 0 == 0x0000;  0000 = 0x0 << 0 == 0x0000;  0000 = 0x0 << 0 == 0x0000;  0000 = 0x0 << 0 == 0x0000;
     *                          ------                      ------                      ------                      ------
-    *                          0x2260                      0x8e00                      0x6440                      0x8200
+    *                          0x2260                      0x8e00                      0x6440                      0xe200
     *
     *   L:  0100 = 0x4 << 3 == 0x4000;  1110 = 0xe << 3 == 0xe000;  0110 = 0x6 << 3 == 0x6000;  0010 = 0x2 << 3 == 0x2000;
     *       0100 = 0x4 << 2 == 0x0400;  1000 = 0x8 << 2 == 0x0800;  0010 = 0x2 << 2 == 0x0200;  1110 = 0xe << 2 == 0x0e00;
@@ -92,7 +92,7 @@
     // define the tetrominoes
     var tetrominoes = {
         I : { states : [0x2222, 0xf000, 0x2222, 0xf000], color: 'pink'},
-        J : { states : [0x2260, 0x8e00, 0x6440, 0x8200], color: 'green'},
+        J : { states : [0x2260, 0x8e00, 0x6440, 0xe200], color: 'green'},
         L : { states : [0x4460, 0xe800, 0x6220, 0x2e00], color: 'teal'},
         O : { states : [0x0660, 0x0660, 0x0660, 0x0660], color: 'blue'},
         S : { states : [0x6c00, 0x4620, 0x6c00, 0x4620], color: 'red'},
@@ -143,6 +143,8 @@
         return min + Math.floor(Math.random() * (max - min));
     }
 
+    //
+
     // game loop
     function run() {
 
@@ -158,27 +160,126 @@
 
     }
 
+    function addEvents() {
+        document.addEventListener('keydown', function(event) {
+            keydown(event);
+        }, false);
+    }
 
+    function keydown(e) {
+        var handled = false;
+        switch (e.keyCode) {
+            case keys.up :
+                // rotate object clockwise
+                rotate('clockwise');
+                handled = true;
+                break;
+            case keys.down :
+                // rotate object anti clockwise
+                move('down');
+                handled = true;
+                break;
+            case keys.left :
+                // move piece left
+                move('left');
+                handled = true;
+                break;
+            case keys.right : 
+                // move piece right
+                move('right');
+                handled = true;
+                break;
+        }
+        if (handled) {
+            e.preventDefault();
+        }
+    }
 
-    function isOccupied(x, y, block, states) {
-        blockPartsEach(block, x, y, states, function(blockX, blockY) {
+    function isOccupied(x, y, block, state) {
+        var occupied = false;
+        blockPartsEach(block, x, y, state, function(blockX, blockY) {
             //console.log('blockX:'+blockX+', blockY:'+blockY);
             // check that it is in the court
             if (blockX < 0 || blockX >= courtWidth) {
-                console.log('block is poutside the width bounds');
+                //console.log('block is outside the width bounds');
+                occupied = true;
             }
             if (blockY < 0 || blockY >= courtHeight) {
-                console.log('block is outside the height bounds');
+                //console.log('block is outside the height bounds');
+                occupied = true;
             }
             //console.log(court[blockY][blockX]);
             // check that it is not colliding with any court pieces
             if (court[blockY]) {
                 if (court[blockY][blockX]) {
-                    console.log('court is occupied');
+                    //console.log('court is occupied');
+                    occupied = true;
                 }
             }
-
         });
+        return occupied;
+    }
+
+    function move(dir) {
+        // check that the block can go there
+        var newPosition = {
+            x : currentPiece.x, 
+            y : currentPiece.y
+        };
+        switch (dir) {
+            case 'up' : 
+                newPosition.y--;
+                break;
+            case 'left' : 
+                newPosition.x--;
+                break;
+            case 'right' :
+                newPosition.x++;
+                break;
+            case 'down' :
+                newPosition.y++;
+                break;
+        }
+        //console.log(isOccupied(newPosition.x, newPosition.y, currentPiece.type, currentPiece.state));
+        if (!isOccupied(newPosition.x, newPosition.y, currentPiece.type, currentPiece.state)) {
+            console.log('the new position is free');
+            currentPiece.x = newPosition.x;
+            currentPiece.y = newPosition.y;
+            //drawCourt();
+            //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
+        } else {
+            //console.log('i cant move the piece');
+            // if this movement is down, then add the piece to the board
+            if (dir === 'down') {
+                addToBoard(currentPiece, currentPiece.x, currentPiece.y, currentPiece.state);
+            }
+        }
+    }
+
+    function rotate(dir) {
+        var newPosition = currentPiece.state;
+        switch (dir) {
+            case 'clockwise' :
+                newPosition++;
+                break;
+            case 'anticlockwise' :
+                newPosition--;
+                break;
+        }
+        if (newPosition < 0) {
+            newPosition = 3;
+        }
+        if (newPosition > 3) {
+            newPosition = 0
+        }
+
+        if (!isOccupied(currentPiece.x, currentPiece.y, currentPiece.type, newPosition)) {
+            currentPiece.state = newPosition;
+            //drawCourt();
+            //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
+        } else {
+            //console.log('cant rotate to that position');
+        }
     }
 
     function clearLines() {
@@ -199,7 +300,7 @@
             }
         }
         completed.reverse();
-        console.log(completed);
+        //console.log(completed);
         // add the score for completed lines
         if (completed.length > 0) {
             var score = 100*Math.pow(2, completed.length);
@@ -214,12 +315,11 @@
             court.unshift([]);
         }
         //console.log(court);
-
     }
 
     // add fallen block to the board
-    function addToBoard(block, x, y, states) {
-        blockPartsEach(block, x, y, states, function(x, y) {
+    function addToBoard(block, x, y, state) {
+        blockPartsEach(block, x, y, state, function(x, y) {
             court[y] = court[y] || [];
             court[y][x] = block;
         });
@@ -242,8 +342,8 @@
         return {type : piece, state : 0, x : Math.round(getRandom(0, courtWidth-2)), y : 0};
     }
 
-    function blockPartsEach(block, x, y, states, fn) {
-        var blockValue = block.states[states],
+    function blockPartsEach(block, x, y, state, fn) {
+        var blockValue = block.states[state],
             column = 0,
             row = 0;
 
@@ -272,8 +372,8 @@
         drawCourt();
     }
 
-    function drawBlock(block, x, y, states, ctx) {
-        blockPartsEach(block, x, y, states, function(x, y) {
+    function drawBlock(block, x, y, state, ctx) {
+        blockPartsEach(block, x, y, state, function(x, y) {
             drawSquare(x, y, block.color, ctx);
         });
     }
@@ -288,9 +388,9 @@
 
     function drawCourt() {
         var i, j;
-        if (flags.court === 'invalid') {
+        //if (flags.court === 'invalid') {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-        }
+        //}
         for (i = 0; i < courtWidth; i++) {
             for (j = 0; j < courtHeight; j++) {
                 if (court[j][i]) {
@@ -312,16 +412,7 @@
     isOccupied(currentPiece.x, currentPiece.y, currentPiece.type, currentPiece.state);
     //addToBoard(currentPiece.type, 0, 0, 0);
 
-    clearLines();
-
-    alert('redraw court');
-    drawCourt();
-    currentPiece.state++;
-    drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
-
-
-    // move the currnet piece left 1
-    console.log(currentPiece);
+    addEvents();
     
 
 })();
