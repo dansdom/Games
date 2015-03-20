@@ -16,23 +16,21 @@
     // define game constants
     var canvas = document.getElementById('tetris'),
         ctx = canvas.getContext('2d'),
-        court, // object to hold the dropped blocks
+        court = [], // object to hold the dropped blocks
         courtWidth = 12,
         courtHeight = 20,
         blockWidth = canvas.width / courtWidth,
         blockHeight = canvas.height / courtHeight,
         keys = {
-            esc : 27,
-            space : 32,
+            esc : 27, // quit button
+            space : 32, // drop button
             left : 37,
-            up : 38,
+            up : 38, // rotate clockwise
             right : 39,
-            down : 40  
+            down : 40, // rotate anti-clockwise
+            enter : 13 // play/pause button
         };
 
-
-    //console.log(blockWidth);
-    //console.log(blockHeight);
 
     /*
     *   Tetromones
@@ -103,39 +101,19 @@
     // define game variables
     var board, // 2 dimensional array holding positioned blocks
         tetrominoBag = [], // pieces to play
+        isPlaying = false, // game play state
         currentTime, // timestamp of the current frame
         lastTime, // timestamp of the last frame
         currentPiece,
         nextPiece, 
         speed, // speed of the pieces
-        flags = {
-            court : 'invalid',
-            next : 'invalid',
-            score : 'invalid'
-        };
-
-    court = [
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,tetrominoes.T,tetrominoes.Z,tetrominoes.S,tetrominoes.O,0,0,0,0,0,0],
-        [tetrominoes.J,tetrominoes.Z,tetrominoes.T,tetrominoes.T,tetrominoes.T,tetrominoes.O,tetrominoes.O,tetrominoes.T,tetrominoes.T,tetrominoes.L,tetrominoes.J,tetrominoes.T],
-        [0,tetrominoes.T,0,tetrominoes.Z,tetrominoes.S,tetrominoes.O,0,0,0,0,0,0],
-        [tetrominoes.J,tetrominoes.Z,tetrominoes.T,tetrominoes.T,tetrominoes.T,tetrominoes.O,tetrominoes.O,tetrominoes.S,tetrominoes.S,tetrominoes.L,tetrominoes.J,tetrominoes.J],
-        [tetrominoes.J,tetrominoes.Z,tetrominoes.T,tetrominoes.T,tetrominoes.T,tetrominoes.O,tetrominoes.O,tetrominoes.S,tetrominoes.S,tetrominoes.L,tetrominoes.J,tetrominoes.J]
-    ];
+        redraw = { // what parts of the game need to be re-rendered
+            court : true,
+            score : true,
+            next : true
+        },
+        dropTimer,  // drop sequence timer
+        isDropping = false; // drop sequence flag
 
 
     // helper functions
@@ -148,14 +126,18 @@
     // game loop
     function run() {
 
-        //addEvents();
-
+        addEvents();
+        
         function frame() {
             
-
+            draw();
             requestAnimationFrame(frame, canvas);
         }
 
+        currentPiece = getRandomPiece();
+        nextPiece = getRandomPiece();
+        isPlaying = true;
+        draw();
         frame();
 
     }
@@ -169,6 +151,15 @@
     function keydown(e) {
         var handled = false;
         switch (e.keyCode) {
+            case keys.enter :
+                isPlaying = true;
+                handled = true;
+                // need to start the game
+                break;
+            case keys.esc :
+                isPlaying = false;
+                handled = true;
+                break;
             case keys.up :
                 // rotate object clockwise
                 rotate('clockwise');
@@ -187,6 +178,12 @@
             case keys.right : 
                 // move piece right
                 move('right');
+                handled = true;
+                break;
+            case keys.space :
+                console.log('dropping');
+                isDropping = true;
+                drop();
                 handled = true;
                 break;
         }
@@ -242,16 +239,21 @@
         }
         //console.log(isOccupied(newPosition.x, newPosition.y, currentPiece.type, currentPiece.state));
         if (!isOccupied(newPosition.x, newPosition.y, currentPiece.type, currentPiece.state)) {
-            console.log('the new position is free');
+            //console.log('the new position is free');
             currentPiece.x = newPosition.x;
             currentPiece.y = newPosition.y;
+            redraw.court = true;
             //drawCourt();
             //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
         } else {
             //console.log('i cant move the piece');
             // if this movement is down, then add the piece to the board
             if (dir === 'down') {
-                addToBoard(currentPiece, currentPiece.x, currentPiece.y, currentPiece.state);
+                addToBoard(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state);
+                // clear the drop state
+                console.log('clearing timeout');
+                isDropping = false;
+                clearTimeout('dropTimer');
             }
         }
     }
@@ -275,11 +277,31 @@
 
         if (!isOccupied(currentPiece.x, currentPiece.y, currentPiece.type, newPosition)) {
             currentPiece.state = newPosition;
+            redraw.court = true;
             //drawCourt();
             //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
         } else {
             //console.log('cant rotate to that position');
         }
+    }
+
+    function getNextPiece() {
+        redraw.court = true;
+        currentPiece = nextPiece;
+        nextPiece = getRandomPiece();
+        clearLines();
+        draw();
+    }
+
+    function drop() {
+        // set a loop of dropping behaviour until the piece hits the bottom, and then kill it
+        dropTimer = setTimeout(function() {
+            if (isDropping) {
+                move('down');
+                drop();
+            }
+        }, 20);
+
     }
 
     function clearLines() {
@@ -295,7 +317,7 @@
                 }
             }
             if (items === courtWidth) {
-                console.log('removing row: ' + i);
+                //console.log('removing row: ' + i);
                 completed.push(i);
             }
         }
@@ -323,7 +345,8 @@
             court[y] = court[y] || [];
             court[y][x] = block;
         });
-        //console.log(court);
+        // get the next piece
+        getNextPiece();
     }
 
     // get a random tetromino to add to the board
@@ -370,6 +393,7 @@
      **********************/
     function draw() {
         drawCourt();
+        drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
     }
 
     function drawBlock(block, x, y, state, ctx) {
@@ -388,31 +412,25 @@
 
     function drawCourt() {
         var i, j;
-        //if (flags.court === 'invalid') {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-        //}
-        for (i = 0; i < courtWidth; i++) {
-            for (j = 0; j < courtHeight; j++) {
-                if (court[j][i]) {
-                    drawSquare(i, j, court[j][i].color);
-                }
+        if (redraw.court) {
+            // if playing then clear the court
+            if (isPlaying) {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
             }
-        } 
+        
+            for (i = 0; i < courtWidth; i++) {
+                court[i] = court[i] || [];
+                for (j = 0; j < courtHeight; j++) {
+                    court[j] = court[j] || [];
+                    if (court[j][i]) {
+                        drawSquare(i, j, court[j][i].color);
+                    }
+                }
+            } 
+        }
     }
 
-
-
-
-    // draw a dummy court
-    drawCourt();
-    // draw a dummy block
-    currentPiece = getRandomPiece();
-    drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
-    // test dumy block against dummy court
-    isOccupied(currentPiece.x, currentPiece.y, currentPiece.type, currentPiece.state);
-    //addToBoard(currentPiece.type, 0, 0, 0);
-
-    addEvents();
+    run();
     
 
 })();
