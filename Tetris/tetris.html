@@ -134,21 +134,8 @@ a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};"object"===typeof mo
     //------------------------------------------------
     function eachblock(type, x, y, dir, fn) {
       var bit, result, row = 0, col = 0, blocks = type.blocks[dir];
-      console.log(blocks.toString(2));
-      console.log(x);
-      console.log(y);
-      console.log(dir);
-      console.log(fn);
       for(bit = 0x8000 ; bit > 0 ; bit = bit >> 1) {
-        console.group('for');
-        console.log(blocks.toString(2));
-        console.log(bit.toString(2));
-        console.log(blocks & bit);
         if (blocks & bit) {
-          console.group('and');
-          console.log(blocks.toString(2));
-          console.log(bit.toString(2));
-          console.groupEnd();
           fn(x + col, y + row);
         }
         if (++col === 4) {

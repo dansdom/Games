@@ -16,11 +16,15 @@
     // define game constants
     var canvas = document.getElementById('tetris'),
         ctx = canvas.getContext('2d'),
+        previousTime, // time of the last game frame
+        currentTime, // time of this game frame
         court = [], // object to hold the dropped blocks
         courtWidth = 12,
         courtHeight = 20,
         blockWidth = canvas.width / courtWidth,
         blockHeight = canvas.height / courtHeight,
+        minSpeed = 0.05, // fasted speed on the board
+        maxSpeed = 1, // slowest speed on the board 
         keys = {
             esc : 27, // quit button
             space : 32, // drop button
@@ -30,7 +34,6 @@
             down : 40, // rotate anti-clockwise
             enter : 13 // play/pause button
         };
-
 
     /*
     *   Tetromones
@@ -103,9 +106,11 @@
         tetrominoBag = [], // pieces to play
         isPlaying = false, // game play state
         currentTime, // timestamp of the current frame
-        lastTime, // timestamp of the last frame
+        previousTime, // timestamp of the last frame
+        dropTime = 0.2,  // time to move piece down one level
         currentPiece,
         nextPiece, 
+        gameClock = 0, // hold time for game
         speed, // speed of the pieces
         redraw = { // what parts of the game need to be re-rendered
             court : true,
@@ -127,10 +132,14 @@
     function run() {
 
         addEvents();
-        
+        previousTime = currentTime = new Date().getTime();
+
         function frame() {
-            
+            currentTime = new Date().getTime();
+            //console.log(currentTime);
+            updateClock(Math.min(1, (currentTime - previousTime) / 1000));
             draw();
+            previousTime = currentTime;
             requestAnimationFrame(frame, canvas);
         }
 
@@ -140,6 +149,18 @@
         draw();
         frame();
 
+    }
+
+    function updateClock(time) {
+        //console.log(time);
+        // if
+        if (isPlaying) {
+            gameClock = gameClock + time;
+            if (gameClock > dropTime) {
+                gameClock = gameClock - dropTime;
+                move('down');
+            }
+        }
     }
 
     function addEvents() {
@@ -181,7 +202,6 @@
                 handled = true;
                 break;
             case keys.space :
-                console.log('dropping');
                 isDropping = true;
                 drop();
                 handled = true;
@@ -224,9 +244,6 @@
             y : currentPiece.y
         };
         switch (dir) {
-            case 'up' : 
-                newPosition.y--;
-                break;
             case 'left' : 
                 newPosition.x--;
                 break;
@@ -243,17 +260,12 @@
             currentPiece.x = newPosition.x;
             currentPiece.y = newPosition.y;
             redraw.court = true;
-            //drawCourt();
-            //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
         } else {
-            //console.log('i cant move the piece');
             // if this movement is down, then add the piece to the board
             if (dir === 'down') {
                 addToBoard(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state);
                 // clear the drop state
-                console.log('clearing timeout');
                 isDropping = false;
-                clearTimeout('dropTimer');
             }
         }
     }
@@ -301,7 +313,6 @@
                 drop();
             }
         }, 20);
-
     }
 
     function clearLines() {
@@ -327,6 +338,7 @@
         if (completed.length > 0) {
             var score = 100*Math.pow(2, completed.length);
             console.log(score);
+
         }
         // remove the completed lines from the board
         for (i = 0; i < completed.length; i++) {
