@@ -36,7 +36,13 @@
             right : 39,
             down : 40, // rotate anti-clockwise
             enter : 13 // play/pause button
-        };
+        },
+        stats;
+
+    // initialise stats if script is included
+    if (typeof Stats == 'function') {
+        stats = new Stats();
+    }
 
     /*
     *   Tetromones
@@ -141,6 +147,7 @@
         document.getElementById('help').innerHTML = 'press enter to start';
         removeEvents();
         addEvents();
+        showStats();
         previousTime = currentTime = new Date().getTime();
 
         function frame() {
@@ -149,6 +156,9 @@
             updateClock(Math.min(1, (currentTime - previousTime) / 1000));
             draw();
             previousTime = currentTime;
+            if (stats) {
+                stats.update();
+            }
             requestAnimationFrame(frame, canvas);
         }
 
@@ -158,10 +168,20 @@
         frame();
     }
 
+    function showStats() {
+        if (stats) {
+            stats.domElement.id = 'stats';
+            document.getElementById('stats-holder').appendChild(stats.domElement);
+            stats.setMode(0);
+        }
+    }
+
     function startGame() {
         if (gameOver) {
             document.getElementById('help').innerHTML = 'GAME OVER';
             gameOver = false;
+            // remove stats container
+            document.getElementById('stats').remove();
             reset();
         } else { // resume current game
             // remove the help text
@@ -178,6 +198,7 @@
             level : 0
         }
         gameClock = 0;
+        court = [];
         run();
     }
 
