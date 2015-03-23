@@ -15,7 +15,9 @@
 
     // define game constants
     var canvas = document.getElementById('tetris'),
-        ctx = canvas.getContext('2d'),
+        ctx = canvas.getContext('2d'), // court canvas context
+        nextCanvas = document.getElementById('next-piece'),
+        nctx = nextCanvas.getContext('2d'), // next piece canvas context
         previousTime, // time of the last game frame
         currentTime, // time of this game frame
         court = [], // object to hold the dropped blocks
@@ -23,7 +25,7 @@
         courtHeight = 20,
         blockWidth = canvas.width / courtWidth,
         blockHeight = canvas.height / courtHeight,
-        minSpeed = 0.05, // fasted speed on the board
+        minSpeed = 0.04, // fasted speed on the board
         maxSpeed = 1, // slowest speed on the board 
         keys = {
             esc : 27, // quit button
@@ -107,16 +109,22 @@
         isPlaying = false, // game play state
         currentTime, // timestamp of the current frame
         previousTime, // timestamp of the last frame
-        dropTime = 0.2,  // time to move piece down one level
+        dropTime = minSpeed,  // time to move piece down one level
         currentPiece,
         nextPiece, 
         gameClock = 0, // hold time for game
+        scoreCard = { // hold the player score
+            points : 0,
+            lines : 0,
+            level : 0
+        },
         speed, // speed of the pieces
         redraw = { // what parts of the game need to be re-rendered
             court : true,
             score : true,
             next : true
         },
+        gameOver = true, // game over flag
         dropTimer,  // drop sequence timer
         isDropping = false; // drop sequence flag
 
@@ -126,11 +134,10 @@
         return min + Math.floor(Math.random() * (max - min));
     }
 
-    //
-
     // game loop
     function run() {
 
+        document.getElementById('help').innerHTML = 'esc to pause';
         addEvents();
         previousTime = currentTime = new Date().getTime();
 
@@ -145,21 +152,47 @@
 
         currentPiece = getRandomPiece();
         nextPiece = getRandomPiece();
-        isPlaying = true;
         draw();
         frame();
 
     }
 
+    function startGame() {
+        if (gameOver) {
+            document.getElementById('help').innerHTML = 'GAME OVER';
+            gameOver = false;
+            reset();
+        } else { // resume current game
+            // remove the help text
+            document.getElementById('help').innerHTML = 'esc to pause';
+            isPlaying = true;
+        }
+    }
+
+    function reset() {
+        
+        isPlaying = true;
+        scoreCard = {
+            points : 0,
+            lines : 0,
+            level : 0
+        }
+        gameClock = 0;
+        run();
+    }
+
     function updateClock(time) {
         //console.log(time);
-        // if
         if (isPlaying) {
             gameClock = gameClock + time;
             if (gameClock > dropTime) {
                 gameClock = gameClock - dropTime;
                 move('down');
             }
+        } else {
+            // set game clock to zero until game is un-paused
+            // will need to check this
+            gameClock = 0;
         }
     }
 
@@ -173,12 +206,14 @@
         var handled = false;
         switch (e.keyCode) {
             case keys.enter :
-                isPlaying = true;
+                if (!isPlaying) {
+                    startGame();
+                }
                 handled = true;
-                // need to start the game
                 break;
             case keys.esc :
                 isPlaying = false;
+                document.getElementById('help').innerHTML = 'Press enter to start';
                 handled = true;
                 break;
             case keys.up :
@@ -299,10 +334,20 @@
 
     function getNextPiece() {
         redraw.court = true;
+        redraw.next = true;
         currentPiece = nextPiece;
         nextPiece = getRandomPiece();
         clearLines();
         draw();
+        // need to test that the next piece will fit onto the board
+        if (isOccupied(nextPiece.x, nextPiece.y, nextPiece.type, nextPiece.state)) {
+            // game over
+            isPlaying = false;
+            console.log('game over dude')
+            gameOver = true;
+            document.getElementById('help').innerHTML = 'GAME OVER';
+        }
+
     }
 
     function drop() {
@@ -312,7 +357,7 @@
                 move('down');
                 drop();
             }
-        }, 20);
+        }, 15);
     }
 
     function clearLines() {
@@ -336,8 +381,12 @@
         //console.log(completed);
         // add the score for completed lines
         if (completed.length > 0) {
-            var score = 100*Math.pow(2, completed.length);
-            console.log(score);
+            scoreCard.points = 100*Math.pow(2, completed.length);
+            scoreCard.lines++;
+            scoreCard.level = Math.floor(scoreCard.lines % 10);
+            redraw.score = true;
+            // calculate the drop time
+            dropTime = ;//
 
         }
         // remove the completed lines from the board
@@ -404,8 +453,12 @@
      *  Drawing functions *
      **********************/
     function draw() {
-        drawCourt();
-        drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
+        if (isPlaying) {
+            drawCourt();
+            drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
+            drawNextPiece();
+            drawScore();
+        }
     }
 
     function drawBlock(block, x, y, state, ctx) {
@@ -414,7 +467,7 @@
         });
     }
 
-    function drawSquare(x, y, color) {
+    function drawSquare(x, y, color, ctx) {
         //console.log('x:'+x+', y: '+y);
         ctx.fillStyle = color;
         ctx.fillRect(x*blockWidth, y*blockHeight, blockWidth, blockHeight);
@@ -427,7 +480,7 @@
         if (redraw.court) {
             // if playing then clear the court
             if (isPlaying) {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         
             for (i = 0; i < courtWidth; i++) {
@@ -435,10 +488,26 @@
                 for (j = 0; j < courtHeight; j++) {
                     court[j] = court[j] || [];
                     if (court[j][i]) {
-                        drawSquare(i, j, court[j][i].color);
+                        drawSquare(i, j, court[j][i].color, ctx);
                     }
                 }
             } 
+        }
+    }
+
+    function drawNextPiece() {
+        if (isPlaying && redraw.next) {
+            nctx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+            drawBlock(nextPiece.type, 0, 0, 0, nctx);
+            redraw.next = false;
+        }
+    }
+
+    function drawScore() {
+        if (isPlaying && redraw.score) {
+            document.getElementById('score').innHTML = scoreCard.points;
+            document.getElementById('lines').innHTML = scoreCard.lines;
+            document.getElementById('level').innHTML = scoreCard.level;
         }
     }
 

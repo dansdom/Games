@@ -11,11 +11,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <style>
+        #tetris {float:left;}
+        #help {float:left;}
+        #next-piece {float:left ;}
+    </style>
 </head>
 <body>
     <div id="wrap">
         <div id="content">
             <canvas id="tetris" height="400" width="240" style="background:rgba(0,0,0,0.1)"></canvas> 
+            <canvas id="next-piece" height="80" width="80" style="background:rgba(0,0,0,0.2)"></canvas>
+            <div id="help">Press enter to start</div>
+            <div id="scorecard">
+                <p>score: <span id="score">0</span></p>
+                <p>lines: <span id="lines">0</span></p>
+                <p>level: <span id="level">0</span></p>
+            </div>
         </div>
     </div>
 
