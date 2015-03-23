@@ -460,7 +460,7 @@
             piece;
 
         if (tetrominoBag.length === 0) {
-            tetrominoBag = [t.I,t.I,t.I,t.I,t.J,t.J,t.J,t.J,t.L,t.L,t.L,t.L,t.O,t.O,t.O,t.O,t.S,t.S,t.S,t.S,t.T,t.T,t.T,t.T,t.Z,t.Z,t.Z,t.Z,];
+            tetrominoBag = [t.I,t.I,t.I,t.I,t.J,t.J,t.J,t.J,t.L,t.L,t.L,t.L,t.O,t.O,t.O,t.O,t.S,t.S,t.S,t.S,t.T,t.T,t.T,t.T,t.Z,t.Z,t.Z,t.Z];
         }
         // grab a random piece out of the bag
         randomIndex = getRandom(0, tetrominoBag.length);
