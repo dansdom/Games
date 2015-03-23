@@ -27,6 +27,7 @@
         blockHeight = canvas.height / courtHeight,
         minSpeed = 0.04, // fasted speed on the board
         maxSpeed = 1, // slowest speed on the board 
+        levelIncrement = 0.05, // amount the pieces speed up every level
         keys = {
             esc : 27, // quit button
             space : 32, // drop button
@@ -109,7 +110,7 @@
         isPlaying = false, // game play state
         currentTime, // timestamp of the current frame
         previousTime, // timestamp of the last frame
-        dropTime = minSpeed,  // time to move piece down one level
+        dropTime = maxSpeed,  // time to move piece down one level
         currentPiece,
         nextPiece, 
         gameClock = 0, // hold time for game
@@ -138,6 +139,7 @@
     function run() {
 
         document.getElementById('help').innerHTML = 'esc to pause';
+        removeEvents();
         addEvents();
         previousTime = currentTime = new Date().getTime();
 
@@ -154,7 +156,6 @@
         nextPiece = getRandomPiece();
         draw();
         frame();
-
     }
 
     function startGame() {
@@ -170,7 +171,6 @@
     }
 
     function reset() {
-        
         isPlaying = true;
         scoreCard = {
             points : 0,
@@ -197,9 +197,11 @@
     }
 
     function addEvents() {
-        document.addEventListener('keydown', function(event) {
-            keydown(event);
-        }, false);
+        document.addEventListener('keydown', keydown, false);
+    }
+
+    function removeEvents() {
+        document.removeEventListener('keydown', keydown);
     }
 
     function keydown(e) {
@@ -223,7 +225,7 @@
                 break;
             case keys.down :
                 // rotate object anti clockwise
-                move('down');
+                rotate('anticlockwise');
                 handled = true;
                 break;
             case keys.left :
@@ -325,8 +327,6 @@
         if (!isOccupied(currentPiece.x, currentPiece.y, currentPiece.type, newPosition)) {
             currentPiece.state = newPosition;
             redraw.court = true;
-            //drawCourt();
-            //drawBlock(currentPiece.type, currentPiece.x, currentPiece.y, currentPiece.state, ctx);
         } else {
             //console.log('cant rotate to that position');
         }
@@ -381,12 +381,13 @@
         //console.log(completed);
         // add the score for completed lines
         if (completed.length > 0) {
-            scoreCard.points = 100*Math.pow(2, completed.length);
+            scoreCard.points += 100*Math.pow(2, completed.length);
             scoreCard.lines++;
             scoreCard.level = Math.floor(scoreCard.lines % 10);
             redraw.score = true;
+            console.log('score card level: ' + scoreCard.level);
             // calculate the drop time
-            dropTime = ;//
+            dropTime = maxSpeed - (levelIncrement * scoreCard.level);
 
         }
         // remove the completed lines from the board
@@ -505,9 +506,9 @@
 
     function drawScore() {
         if (isPlaying && redraw.score) {
-            document.getElementById('score').innHTML = scoreCard.points;
-            document.getElementById('lines').innHTML = scoreCard.lines;
-            document.getElementById('level').innHTML = scoreCard.level;
+            document.getElementById('score').innerHTML = scoreCard.points;
+            document.getElementById('lines').innerHTML = scoreCard.lines;
+            document.getElementById('level').innerHTML = scoreCard.level;
         }
     }
 
