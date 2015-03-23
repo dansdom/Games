@@ -12,13 +12,21 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <style>
+        html {font-family:Helvetica;font-size:0.9em;}
         .leftcol {float:left;margin-right:20px;}
+        .leftcol p {text-align:center;}
         .rightcol {float:left;}
-        #content {width:400px;margin:20px auto;border:1px solid #ccc;padding:20px;overflow:hidden;}
+        .rightcol h1 {margin:0;font-size:14px;float:left;line-height:80px;}
+        .rightcol h4 {font-size:14px;margin:0;text-decoration:underline;}
+        #content {width:500px;margin:20px auto;border:1px solid #ccc;padding:20px;overflow:hidden;}
         #tetris {background:rgba(0,0,0,0.1);}
         #help {}
         #next-piece {display:block;margin:0 auto;}
-        #scorecard {}
+        #scorecard h2 {font-size:18px;margin:0 0 10px;}
+        #scorecard p {margin:0 0 10px;}
+        .key-codes {margin:0 0 20px;padding:0;}
+        .key-codes li {list-style:none;display:block;}
+        .key-codes li strong {display:inline-block;width:65px;}
     </style>
 </head>
 <body>
@@ -29,6 +37,7 @@
                 <p><span id="help">Press enter to start</span></p>
             </div>
             <div class="rightcol">
+                <h1>Next Piece:</h1>
                 <canvas id="next-piece" height="80" width="80"></canvas>
                 <div id="scorecard">
                     <h2>Scoreboard</h2>
@@ -36,6 +45,17 @@
                     <p>lines: <span id="lines">0</span></p>
                     <p>level: <span id="level">0</span></p>
                 </div>
+                <h4>Key Codes</h4>
+                <ul class="key-codes">
+                    <li><strong>enter:</strong> start/unpause</li>
+                    <li><strong>esc:</strong> pause</li>
+                    <li><strong>q:</strong> quit game</li>
+                    <li><strong>up:</strong> rotate clockwise</li>
+                    <li><strong>down:</strong> rotate anti-clockwise</li>
+                    <li><strong>left:</strong> move left</li>
+                    <li><strong>right:</strong> move right</li>
+                    <li><strong>space:</strong> drop piece</li>
+                </ul>
                 <div id="stats-holder"></div>
             </div>
         </div>
