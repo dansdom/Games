@@ -35,7 +35,8 @@
             up : 38, // rotate clockwise
             right : 39,
             down : 40, // rotate anti-clockwise
-            enter : 13 // play/pause button
+            enter : 13, // play/pause button
+            q : 81 // quit button - reset board
         },
         stats;
 
@@ -196,10 +197,26 @@
             points : 0,
             lines : 0,
             level : 0
-        }
+        };
+        redraw = {
+            court : true,
+            score : true,
+            next : true
+        };
         gameClock = 0;
         court = [];
         run();
+    }
+
+    function quitGame() {
+        isPlaying = false;
+        gameOver = true;
+        document.getElementById('help').innerHTML = 'Press enter to start';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        nctx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+        document.getElementById('score').innerHTML = '0';
+        document.getElementById('lines').innerHTML = '0';
+        document.getElementById('level').innerHTML = '0';
     }
 
     function updateClock(time) {
@@ -265,6 +282,11 @@
                 drop();
                 handled = true;
                 break;
+            case keys.q :
+                quitGame();
+                handled = true;
+                break
+                
         }
         if (handled) {
             e.preventDefault();
@@ -365,7 +387,6 @@
         if (isOccupied(nextPiece.x, nextPiece.y, nextPiece.type, nextPiece.state)) {
             // game over
             isPlaying = false;
-            console.log('game over dude')
             gameOver = true;
             document.getElementById('help').innerHTML = 'GAME OVER';
         }
@@ -407,7 +428,6 @@
             scoreCard.lines++;
             scoreCard.level = Math.floor(scoreCard.lines / 10);
             redraw.score = true;
-            console.log('score card level: ' + scoreCard.level);
             // calculate the drop time
             dropTime = maxSpeed - (levelIncrement * scoreCard.level);
 
