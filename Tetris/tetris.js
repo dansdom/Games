@@ -138,7 +138,7 @@
     // game loop
     function run() {
 
-        document.getElementById('help').innerHTML = 'esc to pause';
+        document.getElementById('help').innerHTML = 'press enter to start';
         removeEvents();
         addEvents();
         previousTime = currentTime = new Date().getTime();
@@ -165,7 +165,7 @@
             reset();
         } else { // resume current game
             // remove the help text
-            document.getElementById('help').innerHTML = 'esc to pause';
+            document.getElementById('help').innerHTML = 'press enter to start';
             isPlaying = true;
         }
     }
@@ -210,6 +210,7 @@
             case keys.enter :
                 if (!isPlaying) {
                     startGame();
+                    document.getElementById('help').innerHTML = 'Press esc to pause';
                 }
                 handled = true;
                 break;
@@ -383,7 +384,7 @@
         if (completed.length > 0) {
             scoreCard.points += 100*Math.pow(2, completed.length);
             scoreCard.lines++;
-            scoreCard.level = Math.floor(scoreCard.lines % 10);
+            scoreCard.level = Math.floor(scoreCard.lines / 10);
             redraw.score = true;
             console.log('score card level: ' + scoreCard.level);
             // calculate the drop time
