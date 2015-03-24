@@ -27,7 +27,7 @@
         blockHeight = canvas.height / courtHeight,
         minSpeed = 0.04, // fasted speed on the board
         maxSpeed = 1, // slowest speed on the board 
-        levelIncrement = 0.05, // amount the pieces speed up every level
+        levelIncrement = 0.08, // amount the pieces speed up every level
         keys = {
             esc : 27, // quit button
             space : 32, // drop button
