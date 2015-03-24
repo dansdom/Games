@@ -204,7 +204,7 @@
             next : true
         };
         gameClock = 0;
-        speed = maxSpeed; // reset game speed 
+        dropTime = maxSpeed; // reset game speed 
         court = [];
         run();
     }
