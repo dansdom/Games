@@ -203,6 +203,7 @@
             next : true
         };
         gameClock = 0;
+        dropTime = maxSpeed; // reset game speed 
         court = [];
         run();
     }
