@@ -18,16 +18,13 @@
         ctx = canvas.getContext('2d'), // court canvas context
         nextCanvas = document.getElementById('next-piece'),
         nctx = nextCanvas.getContext('2d'), // next piece canvas context
-        previousTime, // time of the last game frame
-        currentTime, // time of this game frame
-        court = [], // object to hold the dropped blocks
         courtWidth = 12,
         courtHeight = 20,
         blockWidth = canvas.width / courtWidth,
         blockHeight = canvas.height / courtHeight,
         minSpeed = 0.04, // fasted speed on the board
         maxSpeed = 1, // slowest speed on the board 
-        levelIncrement = 0.05, // amount the pieces speed up every level
+        levelIncrement = 0.08, // amount the pieces speed up every level
         keys = {
             esc : 27, // quit button
             space : 32, // drop button
@@ -37,13 +34,7 @@
             down : 40, // rotate anti-clockwise
             enter : 13, // play/pause button
             q : 81 // quit button - reset board
-        },
-        stats;
-
-    // initialise stats if script is included
-    if (typeof Stats == 'function') {
-        stats = new Stats();
-    }
+        };
 
     /*
     *   Tetromones
@@ -114,6 +105,9 @@
     // define game variables
     var board, // 2 dimensional array holding positioned blocks
         tetrominoBag = [], // pieces to play
+        previousTime, // time of the last game frame
+        currentTime, // time of this game frame
+        court = [], // object to hold the dropped blocks
         isPlaying = false, // game play state
         currentTime, // timestamp of the current frame
         previousTime, // timestamp of the last frame
@@ -132,10 +126,15 @@
             score : true,
             next : true
         },
+        stats,
         gameOver = true, // game over flag
         dropTimer,  // drop sequence timer
         isDropping = false; // drop sequence flag
 
+    // initialise stats if script is included
+    if (typeof Stats == 'function') {
+        stats = new Stats();
+    }
 
     // helper functions
     function getRandom(min, max) {
