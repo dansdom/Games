@@ -4,8 +4,6 @@ var Game = Game || {};
  **************************************/
 Game.Engine = (function() {
 
-    
-    
     var engine = {
         random: function(min, max) {
             return (min + (Math.random() * (max - min)));
@@ -19,8 +17,9 @@ Game.Engine = (function() {
         timestamp: function() { 
             return new Date().getTime();
         },
-        Runner : function() {
+        Runner : function(game) {
             var animationTimer;  // hold the animation frame timer
+            console.log(game);
 
             // return runner functions
             return {
@@ -58,9 +57,12 @@ Game.Engine = (function() {
                 },
                 update : function(dx) {
                     // update the game condition
+                    game.update(dx);
                 },
                 draw : function() {
                     // draw game elements
+                    // comment out for now
+                    //game.draw();
                 }
             };
         },

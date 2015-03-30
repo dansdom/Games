@@ -60,12 +60,12 @@ Game.Breakout = (function() {
             this.Paddle = new Game.Paddle();
             // get a ball
             this.Ball = new Game.Ball();
+
+            // draw starting state here?!?
             
-            // start the game engine
-            this.Runner = new Game.Engine.Runner();
+            // start the game runner to manage the game loop
+            this.Runner = new Game.Engine.Runner(this);
             this.Runner.init();
-            console.log('init engine');
-            
 
             if (typeof this.callback === 'function') {
                 this.callback.call();
@@ -74,11 +74,19 @@ Game.Breakout = (function() {
         getLevelData : function() {
 
         },
+        update : function(dx) {
+            // not sure what I'm doing here yet on the update functions
+            // wil probably be a game state check for most
+            this.Court.update(dx);
+            this.Paddle.update(dx);
+            // update ball position - for all current balls
+            this.Ball.update(dx);
+        },
         draw : function() {
-            this.Court.draw(ctx);
-            this.Paddle.draw(ctx);
+            this.Court.draw(this.ctx);
+            this.Paddle.draw(this.ctx);
             // if more than one ball, then loop through
-            this.Ball.draw(ctx);
+            this.Ball.draw(this.ctx);
         }
     };
 
@@ -175,6 +183,8 @@ Game.Court = (function() {
     court.prototype = {
         init : function() {
             console.log('making new court');
+            // get all the court data and shis
+            this.draw(newGame.ctx);
         },
         load : function() {
 
@@ -182,11 +192,20 @@ Game.Court = (function() {
         update : function() {
             // do update stuff
 
-            // then draw
-            this.draw();
         },
         draw : function(ctx) {
 
+            ctx.fillStyle = 'green',
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(100,100);
+            ctx.lineTo(200,100);
+            ctx.lineTo(200,0);
+            ctx.lineTo(100,0);
+            ctx.lineTo(100,100);
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
         }
     };
 
