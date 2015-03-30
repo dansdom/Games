@@ -23,10 +23,16 @@
         </div>
     </div>
     
+    <script src="microajax.min.js"></script>
     <script src="stats.js"></script>
     <script src="engine.js"></script>
     <script src="breakout.js"></script>
-    
+    <script>
+        function startFunction() {
+            console.log('the game has started');
+        }
+        var newGame = new Game.Breakout('breakout', {}, startFunction);
+    </script>
     
 </body>
 </html>

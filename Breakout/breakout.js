@@ -12,52 +12,97 @@ if (!window.requestAnimationFrame) {
         }
 }
 
-var Breakout = (function() {
+var Game = Game || {};
+/********************************
+ * Breakout instance constructor
+ ********************************/
+Game.Breakout = (function() {
     'use strict';
 
-    
+    var defaults = {
+        tiles : {
+            x : 48, // width
+            y : 30, //height
+            size : 20 // unit size
+        },
+        level : 1,  // current level of the game
+        dataSource : 'levels.json',
+        levelData : {},
+        lives : 3  // number of lives left
+    };
 
-    
-    var Breakout = {
-        Defaults : {
+    var breakout = function(canvasId, options, callback) {
+        var breakout = this;
+        this.callback = callback;
+        this.settings = extend(true, {}, defaults, options);
+        // define the element and context
+        this.el = document.getElementById(canvasId);
+        this.ctx = this.el.getContext('2d');
+
+        // get the level data first, then init
+        microAjax(this.settings.dataSource, function(data) {
+            breakout.settings.levelData = JSON.parse(data);
+            breakout.init();
+        });
+    };
+
+    breakout.prototype = {
+        init : function() {
+            // make stuff
+            var opts = this.settings;
+
+            // load in the court
+            this.Court = new Game.Court({
+                level : opts.level,
+                levelData : opts.levelData 
+            });
+            // initialise paddle
+            this.Paddle = new Game.Paddle();
+            // get a ball
+            this.Ball = new Game.Ball();
+            
+            // start the game engine
+            this.Runner = new Game.Engine.Runner();
+            this.Runner.init();
+            console.log('init engine');
+            
+
+            if (typeof this.callback === 'function') {
+                this.callback.call();
+            }
+        },
+        getLevelData : function() {
 
         },
-        Court : {
-
-        },
-        Ball : {
-            // want multiple balls at once
-        },
-        Paddle : {
-
+        draw : function() {
+            this.Court.draw(ctx);
+            this.Paddle.draw(ctx);
+            // if more than one ball, then loop through
+            this.Ball.draw(ctx);
         }
     };
 
-    Breakout.prototype = {
-        initialise : function() {
-            
-        }
-    }
-
-    return Breakout;
+    return breakout;
 })();
 
 
-var Ball = (function() {
+/*******************
+ * Ball Constructor
+ *******************/
+Game.Ball = (function() {
 
-    // Ball constructor
-    var ball = function(options, callback) {
-        // init the ball
-        this.callback = callback;
-        this.settings = extend(true, {}, this.defaults, options);
-        this.init();
-    }
-
-    ball.defaults = {
+    var defaults = {
         size : 10,
         speed : 10,
         color : 'red'
     };
+
+    var ball = function(options, callback) {
+        // init the ball
+        this.callback = callback;
+        this.settings = extend(true, {}, defaults, options);
+        this.init();
+    }
 
     ball.prototype = {
         init : function() {
@@ -65,24 +110,31 @@ var Ball = (function() {
         },
         update : function() {
 
+        },
+        draw : function(ctx) {
+
         }
     };
 
     return ball;
 })();
 
-var Paddle = (function() {
+
+/*********************
+ * Paddle Constructor
+ *********************/
+Game.Paddle = (function() {
+
+    var defaults = {
+
+    };
 
     var paddle = function(options, callback) {
         // init the paddle
         this.callback = callback;
-        this.settings = extend(true, {}, this.defaults, options);
+        this.settings = extend(true, {}, defaults, options);
         this.init();
     }
-
-    paddle.defaults = {
-
-    };
 
     paddle.prototype = {
         init : function() {
@@ -93,34 +145,50 @@ var Paddle = (function() {
         },
         update : function() {
 
+        },
+        draw : function(ctx) {
+
         }
     };
 
+    return paddle;
 })();
 
-var Court = (function() {
+
+/********************
+ * Court Constructor
+ ********************/
+Game.Court = (function() {
+
+    var defaults = {
+        level : 0,
+        levelData : {}
+    };
 
     var court = function(options, callback) {
         // init the court
         this.callback = callback;
-        this.settings = extend(true, {}, this.defaults, options);
+        this.settings = extend(true, {}, defaults, options);
         this.init();
     }
 
-    court.defaults = {
-
-    };
-
     court.prototype = {
         init : function() {
-
+            console.log('making new court');
         },
         load : function() {
 
         },
         update : function() {
+            // do update stuff
+
+            // then draw
+            this.draw();
+        },
+        draw : function(ctx) {
 
         }
     };
 
+    return court;
 })();
