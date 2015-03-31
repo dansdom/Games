@@ -67,6 +67,9 @@ Game.Engine = (function() {
             };
         },
         Physics : {
+            magnitude : function(x, y) {
+                return Math.sqrt(x*x + y*y);
+            },
             intersect : function(x1,y1,x2,y2,x3,y3,x4,y4,dir) {
                 // http://cs.swan.ac.uk/~cssimon/line_intersection.html
                 var denominator = (x4-x3)*(y1-y2) - (x1-x2)*(y4-y3),

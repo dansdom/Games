@@ -27,7 +27,7 @@ Game.Breakout = (function() {
         },
         level : 1,  // current level of the game
         dataSource : 'levels.json',
-        levelData : {},
+        levelData : {}, // brick data
         lives : 3  // number of lives left
     };
 
@@ -52,14 +52,15 @@ Game.Breakout = (function() {
             var opts = this.settings;
 
             // load in the court
-            this.Court = new Game.Court({
+            this.Court = new Game.Court(this, {
                 level : opts.level,
-                levelData : opts.levelData 
+                levelData : opts.levelData,
+                tiles : opts.tiles 
             });
             // initialise paddle
-            this.Paddle = new Game.Paddle();
+            this.Paddle = new Game.Paddle(this);
             // get a ball
-            this.Ball = new Game.Ball();
+            this.Ball = new Game.Ball(this);
 
             // draw starting state here?!?
             
@@ -105,22 +106,52 @@ Game.Ball = (function() {
         color : 'red'
     };
 
-    var ball = function(options, callback) {
+    var ball = function(game, options, callback) {
         // init the ball
         this.callback = callback;
         this.settings = extend(true, {}, defaults, options);
+        this.game = game;
+        console.log(game);
+        this.targets = [];  // targets that the ball can hit
         this.init();
     }
 
     ball.prototype = {
         init : function() {
-            // extend over the defaults
+            // just for now I'm going to set the speed and direction for testing
+            this.speed = 10;
+            this.x = 100;
+            this.y = 100;
+            this.draw(this.game.ctx);
+            this.moving = true;
+            console.log(Game.Engine.Physics.magnitude(4,4));
         },
-        update : function() {
+        reset : function() {
+            // reset ball position after death or level up
+        },
+        launch : function() {
+
+        },
+        setPos : function(x, y) {
+            this.x = x;
+            this.y = y;
+        },
+        update : function(dt) {
+            //console.log('updating ball: '+dt);
+            if (!this.moving) {
+                alert('ball is no longer moving');
+                return;
+            }
 
         },
         draw : function(ctx) {
-
+            ctx.fillStyle = this.settings.color;
+            ctx.strokeStyle = this.settings.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.settings.size, 0, 2*Math.PI, true);
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
         }
     };
 
@@ -137,10 +168,11 @@ Game.Paddle = (function() {
 
     };
 
-    var paddle = function(options, callback) {
+    var paddle = function(game, options, callback) {
         // init the paddle
         this.callback = callback;
         this.settings = extend(true, {}, defaults, options);
+        this.game = game;
         this.init();
     }
 
@@ -173,18 +205,21 @@ Game.Court = (function() {
         levelData : {}
     };
 
-    var court = function(options, callback) {
+    var court = function(game, options, callback) {
         // init the court
         this.callback = callback;
         this.settings = extend(true, {}, defaults, options);
+        this.game = game;
         this.init();
     }
 
     court.prototype = {
         init : function() {
             console.log('making new court');
+            // make the bricks object
+
             // get all the court data and shis
-            this.draw(newGame.ctx);
+            this.render(this.game.ctx);
         },
         load : function() {
 
@@ -193,16 +228,35 @@ Game.Court = (function() {
             // do update stuff
 
         },
-        draw : function(ctx) {
+        draw : function() {
 
-            ctx.fillStyle = 'green',
+        },
+        render : function(ctx) {
+            var opts = this.settings,
+                bricks, // have stored bricks?
+                i = 0;
+
+            // draw the bricks
+            
+
+            this.padding = opts.tiles.size * 2;
+            this.width = opts.tiles.size * opts.tiles.x;
+            this.height = opts.tiles.size * opts.tiles.y;
+            this.boundary = {};
+            this.boundary.top = this.padding;
+            this.boundary.left = this.padding;
+            this.boundary.bottom = this.boundary.top + (opts.tiles.y * opts.tiles.size);
+            this.boundary.right = this.boundary.left + (opts.tiles.x * opts.tiles.size);
+            console.log(this.boundary);
+
+            ctx.fillStyle = 'transparent',
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(100,100);
-            ctx.lineTo(200,100);
-            ctx.lineTo(200,0);
-            ctx.lineTo(100,0);
-            ctx.lineTo(100,100);
+            ctx.moveTo(this.boundary.left, this.boundary.top);
+            ctx.lineTo(this.boundary.left, this.boundary.bottom);
+            ctx.lineTo(this.boundary.right, this.boundary.bottom);
+            ctx.lineTo(this.boundary.right, this.boundary.top);
+            ctx.lineTo(this.boundary.left, this.boundary.top);
             ctx.fill();
             ctx.stroke();
             ctx.closePath();
